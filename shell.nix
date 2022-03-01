@@ -63,7 +63,7 @@ stdenv.mkDerivation {
     "-m" "1024"
     "-nographic"
     "-no-reboot"  # shutdown means exit
-    "-kernel" "${kernel}/vmlinuz-5.10.88"
+    "-kernel" "${kernel}/vmlinuz-${kernel.version}"
     "-initrd" "${initrd}/initrd.gz"
     "-net" "none"
     "-vga" "none"
@@ -74,6 +74,17 @@ stdenv.mkDerivation {
 
   # ... I do this instead.
   shellHook = ''
-  ${pkgs.qemu}/bin/qemu-system-mips64el     -M malta     -cpu 5KEc     -m 1024     -nographic     -kernel ${kernel}/vmlinuz-5.10.88     -initrd ${initrd}/initrd.gz     -net none     -vga none     -fsdev local,path=/nix/store,security_model=mapped-xattr,id=nixstore,readonly=on     -device virtio-9p-pci,fsdev=nixstore,mount_tag=nixstore     -append "console=ttyS0 init=/bin/ash"
-'';
+    ${pkgs.qemu}/bin/qemu-system-mips64el \
+     -M malta \
+     -cpu 5KEc \
+     -m 1024  \
+     -nographic \
+     -kernel ${kernel}/vmlinuz-${kernel.version} \
+     -initrd ${initrd}/initrd.gz \
+     -net none \
+     -vga none \
+     -fsdev local,path=/nix/store,security_model=mapped-xattr,id=nixstore,readonly=on \
+     -device virtio-9p-pci,fsdev=nixstore,mount_tag=nixstore \
+     -append "console=ttyS0 init=/bin/ash"
+  '';
 }
