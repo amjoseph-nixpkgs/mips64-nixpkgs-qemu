@@ -47,15 +47,6 @@ let
     '';
   };
 
-in
-
-# you MUST use nix-shell here; qemu needs to grab the pty, and no
-# other invocation of the nixtools will give it the pty
-stdenv.mkDerivation {
-  system = stdenv.hostPlatform.system;
-  name = "run-qemu-system-mips64el";
-
-  # I can't figure out how to make nix do this with a pty, so...
   builder = "${pkgs.qemu}/bin/qemu-system-mips64el";
   args = [
     "-M" "malta"
@@ -71,20 +62,18 @@ stdenv.mkDerivation {
     "-device" "virtio-9p-pci,fsdev=nixstore,mount_tag=nixstore"
     "-append" "console=ttyS0 init=/bin/ash"
   ];
+in
+# you MUST use nix-shell here; qemu needs to grab the pty, and no
+# other invocation of the nixtools will give it the pty
+stdenv.mkDerivation {
+  system = stdenv.hostPlatform.system;
+  name = "run-qemu-system-mips64el";
+  builder = builder;
+  args = args;
 
-  # ... I do this instead.
-  shellHook = ''
-    ${pkgs.qemu}/bin/qemu-system-mips64el \
-     -M malta \
-     -cpu 5KEc \
-     -m 1024  \
-     -nographic \
-     -kernel ${kernel}/vmlinuz-${kernel.version} \
-     -initrd ${initrd}/initrd.gz \
-     -net none \
-     -vga none \
-     -fsdev local,path=/nix/store,security_model=mapped-xattr,id=nixstore,readonly=on \
-     -device virtio-9p-pci,fsdev=nixstore,mount_tag=nixstore \
-     -append "console=ttyS0 init=/bin/ash"
-  '';
+  shellHook =
+    builder
+    + " "
+    + lib.concatStringsSep " " (builtins.map (x: "\'"+x+"\'") args)
+    + "; exit";
 }
