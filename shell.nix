@@ -59,7 +59,7 @@ let
     "-initrd" "${initrd}/initrd.gz"
     "-net" "none"
     "-vga" "none"
-    "-fsdev" "local,path=/nix/store,security_model=mapped-xattr,id=nixstore,readonly=on"
+    "-fsdev" "local,path=/nix/store,security_model=none,id=nixstore,readonly=on"
     "-device" "virtio-9p-pci,fsdev=nixstore,mount_tag=nixstore"
     "-append" "console=ttyS0 init=/bin/sh"
   ];
