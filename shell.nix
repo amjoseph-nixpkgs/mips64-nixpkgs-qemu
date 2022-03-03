@@ -24,6 +24,9 @@ let
     initscript = ''
       #!/bin/sh
       mount -a
+      mknod /dev/urandom c 1 9
+      mknod /dev/null c 1 3
+      mknod /dev/ptmx c 5 2
       /bin/sh
       reboot -f   # exit qemu
       '';
