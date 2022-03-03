@@ -1,6 +1,9 @@
+{ NIXPATH }:
 with import <nixpkgs> { };
 
 let
+  bootstrap-files = (import /nix/git/bootstrap/pkgs/stdenv/linux/make-bootstrap-tools-cross.nix { }).mips64el-linux-gnuabi64.build;
+  static-nix = pkgs.pkgsCross.mips64el-linux-gnuabi64.pkgsStatic.nix_2_4;
   hello   = pkgs.pkgsCross.mips64el-linux-gnuabi64.pkgsStatic.hello;
   busybox = pkgs.pkgsCross.mips64el-linux-gnuabi64.pkgsStatic.busybox;
   kernel  = pkgs.pkgsCross.mips64el-qemu-linux-gnuabi64.linux;
@@ -19,7 +22,8 @@ let
       tmpfs           /run            tmpfs   nosuid,size=10%,mode=755  0 0
       proc            /proc           proc    defaults                  0 0
       sysfs           /sys            sysfs   noauto                    0 0
-      nixstore        /nix/store      9p      ro,msize=524288           0 0
+      nixstore        /host/nix/store 9p      ro,msize=524288           0 0
+      nixpkgs         /host/nixpkgs   9p      ro,msize=524288           0 0
     '';
     initscript = ''
       #!/bin/sh
@@ -33,9 +37,11 @@ let
     buildPhase = ''
       mkdir initrd
       cd initrd
-      mkdir -p bin etc dev dev/pts run proc sys initrd tmp nix/store
+      mkdir -p bin etc dev dev/pts run proc sys initrd tmp nix host/nix/store host/nixpkgs
       ln -s bin sbin
       ln -s ${hello.out}/bin/hello hello-from-nix
+      ln -s /host/${bootstrap-files.out} bootstrap-files
+      ln -s /host/${static-nix.out} static-nix
       cp -r ${busybox.out}/bin/* bin/
       cp $initscriptPath init
       chmod +x init
@@ -61,6 +67,8 @@ let
     "-vga" "none"
     "-fsdev" "local,path=/nix/store,security_model=none,id=nixstore,readonly=on"
     "-device" "virtio-9p-pci,fsdev=nixstore,mount_tag=nixstore"
+    "-fsdev" "local,path=${NIXPATH}/nixpkgs,security_model=none,id=nixpkgs,readonly=on"
+    "-device" "virtio-9p-pci,fsdev=nixpkgs,mount_tag=nixpkgs"
     "-append" "console=ttyS0 init=/bin/sh"
   ];
 in
