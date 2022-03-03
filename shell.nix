@@ -24,20 +24,18 @@ let
     initscript = ''
       #!/bin/sh
       mount -a
-      mkdir -p /nix/store
-      mount -t 9p -o ro nixstore /nix/store
-      ln -s ${hello.out}/bin/hello hello-from-nix
-      exec /bin/sh
+      /bin/sh
+      reboot -f   # exit qemu
       '';
     buildPhase = ''
       mkdir initrd
       cd initrd
-      mkdir bin
-      cp -r ${busybox.out}/bin/* bin/
+      mkdir -p bin etc dev dev/pts run proc sys initrd tmp nix/store
       ln -s bin sbin
+      ln -s ${hello.out}/bin/hello hello-from-nix
+      cp -r ${busybox.out}/bin/* bin/
       cp $initscriptPath init
       chmod +x init
-      mkdir etc dev dev/pts run proc sys initrd tmp
       cp $inittabPath etc/inittab
       cp $fstabPath etc/fstab
     '';
