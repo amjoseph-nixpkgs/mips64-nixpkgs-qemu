@@ -58,9 +58,10 @@ let
     "-vga" "none"
     "-fsdev" "local,path=/nix/store,security_model=mapped-xattr,id=nixstore,readonly=on"
     "-device" "virtio-9p-pci,fsdev=nixstore,mount_tag=nixstore"
-    "-append" "console=ttyS0 init=/bin/ash"
+    "-append" "console=ttyS0 init=/bin/sh"
   ];
 in
+
 # you MUST use nix-shell here; qemu needs to grab the pty, and no
 # other invocation of the nixtools will give it the pty
 stdenv.mkDerivation {
