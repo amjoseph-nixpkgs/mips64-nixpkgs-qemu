@@ -19,7 +19,7 @@ let
       tmpfs           /run            tmpfs   nosuid,size=10%,mode=755  0 0
       proc            /proc           proc    defaults                  0 0
       sysfs           /sys            sysfs   noauto                    0 0
-      nixstore        /nix/store      9p      ro                        0 0
+      nixstore        /nix/store      9p      ro,msize=524288           0 0
     '';
     initscript = ''
       #!/bin/sh
