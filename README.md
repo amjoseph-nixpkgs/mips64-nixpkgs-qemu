@@ -1,3 +1,11 @@
+## nixpkgs expression for mips64el kernel+initrd+qemu
+
+This provides a nix expression for a mips64el qemu instance, with the
+host /nix/store 9p-mounted inside the guest.
+
+Your nixpkgs must have [PR
+161158](https://github.com/NixOS/nixpkgs/pull/161158) included in it.
+
 ```
 $ nix-shell
 
