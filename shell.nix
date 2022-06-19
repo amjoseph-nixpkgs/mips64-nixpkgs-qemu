@@ -1,8 +1,11 @@
-{ NIXPATH }:
 with import <nixpkgs> { };
 
+{ NIXPATH
+, bootstrap-files-on-server ? builtins.toPath "${(import <nixpkgs/pkgs/stdenv/linux/make-bootstrap-tools-cross.nix> { }).mips64el-linux-gnuabi64.build.out}/on-server"
+}:
+
 let
-  bootstrap-files = (import <nixpkgs/pkgs/stdenv/linux/make-bootstrap-tools-cross.nix> { }).mips64el-linux-gnuabi64.build;
+  
   static-nix = pkgs.pkgsCross.mips64el-linux-gnuabi64.pkgsStatic.nix_2_4;
   hello   = pkgs.pkgsCross.mips64el-linux-gnuabi64.pkgsStatic.hello;
   busybox = pkgs.pkgsCross.mips64el-linux-gnuabi64.pkgsStatic.busybox;
@@ -13,7 +16,7 @@ let
     buildInputs = [ hello busybox ];
     nativeBuildInputs = [ cpio gzip ];
     strictDeps = true;
-    passAsFile = [ "initscript" "fstab" "inittab" ];
+    passAsFile = [ "initscript" "fstab" "inittab" "demonix" "demoscript" ];
     inittab = ''
       console::askfirst:-/bin/sh
     '';
@@ -34,16 +37,37 @@ let
       /bin/sh
       reboot -f   # exit qemu
       '';
+    demonix = ''
+      let pkgs = import <nixpkgs> {}; in
+        pkgs.callPackage (import <nixpkgs/pkgs/stdenv/linux/bootstrap-tools/default.nix>) {
+        bootstrapFiles = import <nixpkgs/pkgs/stdenv/linux/bootstrap-files/mips64el.nix>;
+        extraAttrs = { };
+      }
+      '';
+    demoscript = ''
+      USER=root \
+      NIX_LIBEXEC_DIR=$(readlink ./static-nix)/libexec \
+      $(readlink ./static-nix)/bin/nix-build \
+        --no-sandbox \
+        --option sandbox false \
+        --option substituters "" \
+        --option build-users-group "" \
+        -I nixpkgs=/host/nixpkgs \
+        demo.nix
+      '';
     buildPhase = ''
       mkdir initrd
       cd initrd
       mkdir -p bin etc dev dev/pts run proc sys initrd tmp nix host/nix/store host/nixpkgs
       ln -s bin sbin
       ln -s ${hello.out}/bin/hello hello-from-nix
-      ln -s /host/${bootstrap-files.out} bootstrap-files
+      ln -s /host/${bootstrap-files-on-server} bootstrap-files
       ln -s /host/${static-nix.out} static-nix
       cp -r ${busybox.out}/bin/* bin/
       cp $initscriptPath init
+      cp $demonixPath demo.nix
+      cp $demoscriptPath demo.sh
+      chmod +x demo.sh
       chmod +x init
       cp $inittabPath etc/inittab
       cp $fstabPath etc/fstab
