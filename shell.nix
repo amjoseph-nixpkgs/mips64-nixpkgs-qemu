@@ -2,7 +2,7 @@
 with import <nixpkgs> { };
 
 let
-  bootstrap-files = (import /nix/git/bootstrap/pkgs/stdenv/linux/make-bootstrap-tools-cross.nix { }).mips64el-linux-gnuabi64.build;
+  bootstrap-files = (import <nixpkgs/pkgs/stdenv/linux/make-bootstrap-tools-cross.nix> { }).mips64el-linux-gnuabi64.build;
   static-nix = pkgs.pkgsCross.mips64el-linux-gnuabi64.pkgsStatic.nix_2_4;
   hello   = pkgs.pkgsCross.mips64el-linux-gnuabi64.pkgsStatic.hello;
   busybox = pkgs.pkgsCross.mips64el-linux-gnuabi64.pkgsStatic.busybox;
