@@ -9,7 +9,7 @@ let
   kernel  = pkgs.pkgsCross.mips64el-qemu-linux-gnuabi64.linux;
   initrd = stdenv.mkDerivation {
     name = "mips64el-qemu-linux-initrd";
-    phases = [ "buildPhase" "installPhase" ];  # hit stdenv with sledgehammer because no src/srcs
+    dontUnpack = true;
     buildInputs = [ hello busybox ];
     nativeBuildInputs = [ cpio gzip ];
     strictDeps = true;
